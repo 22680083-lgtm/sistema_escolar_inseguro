@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Estudiantes</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        /* Estilos adicionales específicos para esta página */
+        .btn-warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Lista de Estudiantes</h1>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Inicio</a></li>
+                    <li><a href="registro.html">Registro</a></li>
+                    <li><a href="estudiantes.html">Lista Estudiantes</a></li>
+                    <li><a href="api-externa.html">API Externa</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <main>
+            <div class="table-container">
+                <div style="margin-bottom: 20px;">
+                    <button onclick="cargarEstudiantes()" class="btn">Actualizar Lista</button>
+                </div>
+
+                <table id="tablaEstudiantes">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="text-align: center;">Cargando estudiantes...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL DE EDICIÓN - Totalmente centrado -->
+    <div id="modalEditar" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Editar Estudiante</h2>
+            
+            <form id="formEditar">
+                <input type="hidden" id="edit-id">
+                
+                <div class="form-group">
+                    <label for="edit-nombre">Nombre Completo:</label>
+                    <input type="text" id="edit-nombre" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-email">Email:</label>
+                    <input type="email" id="edit-email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-telefono">Teléfono:</label>
+                    <input type="tel" id="edit-telefono">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-direccion">Dirección:</label>
+                    <input type="text" id="edit-direccion">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-fechaNacimiento">Fecha de Nacimiento:</label>
+                    <input type="date" id="edit-fechaNacimiento">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-password">Contraseña:</label>
+                    <input type="text" id="edit-password">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
+                    <button type="button" class="btn btn-danger" onclick="cerrarModal()"> Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/estudiantes.js"></script>
+</body>
+</html>

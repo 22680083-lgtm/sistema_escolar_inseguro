@@ -1,0 +1,30 @@
+{
+  "estudiantes": [
+    {
+      "id": 1,
+      "nombre": "maribel",
+      "email": "22680080@cuautla.tecnm.mx",
+      "telefono": "7351484445",
+      "direccion": "benito juarez",
+      "fechaNacimiento": "2026-02-23",
+      "password": "mari123",
+      "fechaRegistro": "2026-02-23T16:16:28.417Z"
+    },
+    {
+      "id": 2,
+      "nombre": "matias",
+      "email": "22680080@cuautla.tecnm.mx",
+      "telefono": "735 256 145 16",
+      "direccion": "benito juarez",
+      "fechaNacimiento": "2024-03-21",
+      "password": "mati123",
+      "fechaRegistro": "2026-02-23T22:11:42.460Z"
+    }
+  ],
+  "configuracion": {
+    "version": "1.0",
+    "ultimoAcceso": "2024-01-01T00:00:00.000Z",
+    "claveSecreta": "123456789",
+    "dbPassword": "admin123"
+  }
+}

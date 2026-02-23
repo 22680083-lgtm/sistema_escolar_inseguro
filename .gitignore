@@ -1,0 +1,13 @@
+# Dependencias
+node_modules/
+package-lock.json
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Base de datos (si no quieres subir datos existentes)
+# db.json  (comenta esto si QUIERES subir la BD con datos)
+
+# Variables de entorno
+.env
