@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>🏫 Sistema Escolar (Versión Segura)</h1>
+            <h1>Sistema Escolar (Versión Segura)</h1>
             <nav>
                 <ul>
                     <li><a href="index.html">Inicio</a></li>
@@ -24,18 +24,6 @@
         </header>
         
         <main>
-            <section class="info-panel">
-                <h2>🔐 Sistema con Autenticación</h2>
-                <p>Para acceder a las funciones del sistema, debes:</p>
-                <ol>
-                    <li><strong>Registrarte</strong> como usuario</li>
-                    <li><strong>Iniciar sesión</strong> con tu cuenta</li>
-                </ol>
-                <div id="userInfo" style="margin-top: 20px; padding: 15px; background-color: #e8f4fd; border-radius: 5px;">
-                    <p>🔴 No has iniciado sesión</p>
-                </div>
-            </section>
-            
             <section class="stats">
                 <h3>Estadísticas del Sistema</h3>
                 <div id="estadisticas">Cargando...</div>
@@ -56,7 +44,7 @@
                 .then(usuario => {
                     // Usuario autenticado
                     document.getElementById('userInfo').innerHTML = `
-                        <p>✅ Has iniciado sesión como: <strong>${usuario.username}</strong></p>
+                        <p>Has iniciado sesión como: <strong>${usuario.username}</strong></p>
                         <p>Email: ${usuario.email}</p>
                     `;
                     
@@ -82,7 +70,7 @@
                 .catch(error => {
                     // Usuario NO autenticado
                     document.getElementById('userInfo').innerHTML = `
-                        <p>🔴 No has iniciado sesión</p>
+                        <p>No has iniciado sesión</p>
                         <p>Por favor, <a href="pages/login.html">inicia sesión</a> o <a href="pages/register.html">regístrate</a> para acceder al sistema.</p>
                     `;
                     
@@ -123,7 +111,7 @@
                 .then(response => {
                     if (response.status === 401) {
                         document.getElementById('estadisticas').innerHTML = 
-                            '<p style="color: #856404;">🔒 Inicia sesión para ver estadísticas</p>';
+                            '<p style="color: #856404;"> Inicia sesión para ver estadísticas</p>';
                         return null;
                     }
                     return response.json();
