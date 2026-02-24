@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema Escolar</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 Iniciar Sesión</h1>
+        </header>
+
+        <main>
+            <div class="form-container" style="max-width: 400px; margin: 0 auto;">
+                <form id="formLogin">
+                    <div class="form-group">
+                        <label for="username">Usuario:</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Contraseña:</label>
+                        <input type="password" id="password" required>
+                    </div>
+
+                    <button type="submit" class="btn">Ingresar</button>
+                </form>
+                
+                <p style="margin-top: 20px; text-align: center;">
+                    ¿No tienes cuenta? <a href="register.html">Regístrate aquí</a>
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('formLogin').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('username').value,
+                    password: document.getElementById('password').value
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    window.location.href = 'index.html';
+                }
+            })
+            .catch(err => {
+                alert('Error: ' + err.message);
+            });
+        });
+    </script>
+</body>
+</html>

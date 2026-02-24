@@ -2,12 +2,18 @@
 node_modules/
 package-lock.json
 
-# Archivos de sistema
+# Archivos de entorno
+.env
+.env.local
+.env.production
+
+# Base de datos (NO subir db.json a producción)
+db.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema
 .DS_Store
 Thumbs.db
-
-# Base de datos (si no quieres subir datos existentes)
-# db.json  (comenta esto si QUIERES subir la BD con datos)
-
-# Variables de entorno
-.env

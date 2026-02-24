@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuario</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📝 Crear Cuenta</h1>
+        </header>
+
+        <main>
+            <div class="form-container" style="max-width: 400px; margin: 0 auto;">
+                <form id="formRegister">
+                    <div class="form-group">
+                        <label for="username">Usuario:</label>
+                        <input type="text" id="username" required minlength="3">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Contraseña:</label>
+                        <input type="password" id="password" required minlength="6">
+                    </div>
+
+                    <button type="submit" class="btn">Registrarse</button>
+                </form>
+                
+                <p style="margin-top: 20px; text-align: center;">
+                    ¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a>
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.getElementById('formRegister').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch('/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: document.getElementById('username').value,
+                    email: document.getElementById('email').value,
+                    password: document.getElementById('password').value
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert('Usuario registrado. Por favor inicia sesión.');
+                    window.location.href = 'login.html';
+                }
+            })
+            .catch(err => {
+                alert('Error: ' + err.message);
+            });
+        });
+    </script>
+</body>
+</html>s
