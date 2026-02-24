@@ -3,23 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Escolar Inseguro</title>
+    <title>Sistema Escolar Seguro</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Sistema Escolar </h1>
+            <h1>🏫 Sistema Escolar (Versión Segura)</h1>
             <nav>
                 <ul>
-                    <li><a href="pages/registro.html">Registro de Estudiantes</a></li>
-                    <li><a href="pages/estudiantes.html">Lista de Estudiantes</a></li>
-                    <li><a href="pages/api-externa.html">API Externa</a></li>
+                    <li><a href="index.html">Inicio</a></li>
+                    <li><a href="#" id="btnRegistro">Registro de Estudiantes</a></li>
+                    <li><a href="#" id="btnLista">Lista de Estudiantes</a></li>
+                    <li><a href="#" id="btnAPI">API Externa</a></li>
+                    <li><a href="pages/login.html" id="btnLogin">Iniciar Sesión</a></li>
+                    <li><a href="pages/register.html" id="btnRegister">Registrarse</a></li>
+                    <li><a href="#" id="btnLogout" style="display:none;">Cerrar Sesión</a></li>
                 </ul>
             </nav>
         </header>
         
         <main>
+            <section class="info-panel">
+                <h2>🔐 Sistema con Autenticación</h2>
+                <p>Para acceder a las funciones del sistema, debes:</p>
+                <ol>
+                    <li><strong>Registrarte</strong> como usuario</li>
+                    <li><strong>Iniciar sesión</strong> con tu cuenta</li>
+                </ol>
+                <div id="userInfo" style="margin-top: 20px; padding: 15px; background-color: #e8f4fd; border-radius: 5px;">
+                    <p>🔴 No has iniciado sesión</p>
+                </div>
+            </section>
+            
             <section class="stats">
                 <h3>Estadísticas del Sistema</h3>
                 <div id="estadisticas">Cargando...</div>
@@ -27,6 +43,109 @@
         </main>
     </div>
     
-    <script src="js/registro.js"></script>
+    <script>
+        // Verificar si el usuario está autenticado
+        function verificarSesion() {
+            fetch('/api/me', { credentials: 'include' })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('No autenticado');
+                })
+                .then(usuario => {
+                    // Usuario autenticado
+                    document.getElementById('userInfo').innerHTML = `
+                        <p>✅ Has iniciado sesión como: <strong>${usuario.username}</strong></p>
+                        <p>Email: ${usuario.email}</p>
+                    `;
+                    
+                    // Mostrar botones de acceso y ocultar login/register
+                    document.getElementById('btnLogin').style.display = 'none';
+                    document.getElementById('btnRegister').style.display = 'none';
+                    document.getElementById('btnLogout').style.display = 'inline-block';
+                    
+                    // Habilitar enlaces a páginas protegidas
+                    document.getElementById('btnRegistro').onclick = (e) => {
+                        e.preventDefault();
+                        window.location.href = 'pages/registro.html';
+                    };
+                    document.getElementById('btnLista').onclick = (e) => {
+                        e.preventDefault();
+                        window.location.href = 'pages/estudiantes.html';
+                    };
+                    document.getElementById('btnAPI').onclick = (e) => {
+                        e.preventDefault();
+                        window.location.href = 'pages/api-externa.html';
+                    };
+                })
+                .catch(error => {
+                    // Usuario NO autenticado
+                    document.getElementById('userInfo').innerHTML = `
+                        <p>🔴 No has iniciado sesión</p>
+                        <p>Por favor, <a href="pages/login.html">inicia sesión</a> o <a href="pages/register.html">regístrate</a> para acceder al sistema.</p>
+                    `;
+                    
+                    // Deshabilitar enlaces a páginas protegidas
+                    document.getElementById('btnRegistro').onclick = (e) => {
+                        e.preventDefault();
+                        alert('Debes iniciar sesión primero');
+                        window.location.href = 'pages/login.html';
+                    };
+                    document.getElementById('btnLista').onclick = (e) => {
+                        e.preventDefault();
+                        alert('Debes iniciar sesión primero');
+                        window.location.href = 'pages/login.html';
+                    };
+                    document.getElementById('btnAPI').onclick = (e) => {
+                        e.preventDefault();
+                        alert('Debes iniciar sesión primero');
+                        window.location.href = 'pages/login.html';
+                    };
+                });
+        }
+
+        // Cerrar sesión
+        document.getElementById('btnLogout').onclick = (e) => {
+            e.preventDefault();
+            fetch('/api/logout', { 
+                method: 'POST',
+                credentials: 'include' 
+            })
+            .then(() => {
+                window.location.reload();
+            });
+        };
+
+        // Cargar estadísticas (requiere autenticación)
+        function cargarEstadisticas() {
+            fetch('/api/estudiantes', { credentials: 'include' })
+                .then(response => {
+                    if (response.status === 401) {
+                        document.getElementById('estadisticas').innerHTML = 
+                            '<p style="color: #856404;">🔒 Inicia sesión para ver estadísticas</p>';
+                        return null;
+                    }
+                    return response.json();
+                })
+                .then(estudiantes => {
+                    if (estudiantes) {
+                        document.getElementById('estadisticas').innerHTML = `
+                            <p><strong>Total de estudiantes registrados:</strong> ${estudiantes.length}</p>
+                        `;
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('estadisticas').innerHTML = 
+                        '<p style="color: #856404;">Inicia sesión para ver estadísticas</p>';
+                });
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            verificarSesion();
+            cargarEstadisticas();
+        });
+    </script>
 </body>
 </html>
