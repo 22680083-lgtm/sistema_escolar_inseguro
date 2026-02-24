@@ -3,61 +3,408 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistema Escolar</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <title>Iniciar Sesión - Sistema Escolar</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+    color: #667eea; /* Color sólido en lugar de degradado */
+}
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav ul li a {
+            color: #667eea;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            background: rgba(102, 126, 234, 0.1);
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        nav ul li a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        nav ul li a.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .auth-container {
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 50px 40px;
+            width: 100%;
+            max-width: 450px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 70px rgba(102, 126, 234, 0.4);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .auth-header h2 {
+    color: transparent;
+    font-size: 32px;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+
+        .auth-header p {
+            color: #666;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 25px;
+        }
+
+        .auth-form label {
+            display: block;
+            margin-bottom: 10px;
+            color: #444;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .auth-form input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .auth-form input:focus {
+            border-color: #667eea;
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .auth-form input::placeholder {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .auth-form button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .auth-form button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .auth-form button:active {
+            transform: translateY(0);
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .auth-footer p {
+            color: #666;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .auth-footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 25px;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .auth-footer a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 25px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s;
+            padding: 8px 16px;
+            border-radius: 25px;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .back-link:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(-5px);
+        }
+
+        .back-link i {
+            margin-right: 8px;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            display: none;
+            border-left: 5px solid #dc3545;
+            font-weight: 500;
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.2);
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            display: none;
+            border-left: 5px solid #28a745;
+            font-weight: 500;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.2);
+        }
+
+        .password-hint {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 8px;
+            padding-left: 5px;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .auth-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🔐 Iniciar Sesión</h1>
+            <h1>🔐 Sistema Escolar Seguro</h1>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Inicio</a></li>
+                    <li><a href="login.html" class="active">Iniciar Sesión</a></li>
+                    <li><a href="register.html">Registrarse</a></li>
+                </ul>
+            </nav>
         </header>
 
-        <main>
-            <div class="form-container" style="max-width: 400px; margin: 0 auto;">
-                <form id="formLogin">
+        <main class="auth-container">
+            <div class="auth-card">
+                <a href="../index.html" class="back-link">← Volver al inicio</a>
+                
+                <div class="auth-header">
+                    <h2>👋 ¡Bienvenido de nuevo!</h2>
+                    <p>Ingresa tus credenciales para acceder al sistema escolar</p>
+                </div>
+
+                <div id="errorMsg" class="error-message"></div>
+                <div id="successMsg" class="success-message"></div>
+
+                <form id="formLogin" class="auth-form">
                     <div class="form-group">
-                        <label for="username">Usuario:</label>
-                        <input type="text" id="username" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="password">Contraseña:</label>
-                        <input type="password" id="password" required>
+                        <label for="username">👤 Nombre de usuario</label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            placeholder="Ej: juan.perez" 
+                            required 
+                            minlength="3"
+                            autocomplete="username"
+                        >
+                        <div class="password-hint">Mínimo 3 caracteres</div>
                     </div>
 
-                    <button type="submit" class="btn">Ingresar</button>
+                    <div class="form-group">
+                        <label for="password">🔒 Contraseña</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="••••••••" 
+                            required 
+                            minlength="6"
+                            autocomplete="current-password"
+                        >
+                        <div class="password-hint">Mínimo 6 caracteres</div>
+                    </div>
+
+                    <button type="submit">
+                        🚀 Iniciar Sesión
+                    </button>
                 </form>
-                
-                <p style="margin-top: 20px; text-align: center;">
-                    ¿No tienes cuenta? <a href="register.html">Regístrate aquí</a>
-                </p>
+
+                <div class="auth-footer">
+                    <p>¿No tienes una cuenta?</p>
+                    <a href="register.html">📝 Regístrate aquí</a>
+                    <br><br>
+                    <small style="color: #999;">Versión 2.0 - Con autenticación segura</small>
+                </div>
             </div>
         </main>
     </div>
 
     <script>
-        document.getElementById('formLogin').addEventListener('submit', function(e) {
+        const formLogin = document.getElementById('formLogin');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+        const submitBtn = document.querySelector('button[type="submit"]');
+
+        formLogin.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username: document.getElementById('username').value,
-                    password: document.getElementById('password').value
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    window.location.href = 'index.html';
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (username.length < 3) {
+                errorMsg.textContent = '❌ El usuario debe tener al menos 3 caracteres';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 6) {
+                errorMsg.textContent = '❌ La contraseña debe tener al menos 6 caracteres';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            submitBtn.innerHTML = '⏳ Iniciando sesión...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al iniciar sesión');
                 }
-            })
-            .catch(err => {
-                alert('Error: ' + err.message);
-            });
+
+                successMsg.textContent = '✅ ¡Login exitoso! Redirigiendo...';
+                successMsg.style.display = 'block';
+
+                setTimeout(() => {
+                    window.location.href = '../index.html';
+                }, 1500);
+
+            } catch (error) {
+                errorMsg.textContent = `❌ ${error.message}`;
+                errorMsg.style.display = 'block';
+                submitBtn.innerHTML = '🚀 Iniciar Sesión';
+                submitBtn.disabled = false;
+            }
         });
     </script>
 </body>
