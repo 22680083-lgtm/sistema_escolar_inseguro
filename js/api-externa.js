@@ -31,18 +31,9 @@ function cargarDatosAPI() {
         .then(data => {
             // Diseño inseguro: Muestra información sensible del sistema
             resultado.innerHTML = `
-                <h3>Datos de API Externa (Información Expuesta)</h3>
-                <div class="json-output">${JSON.stringify(data, null, 2)}</div>
-                
-                <div class="vulnerability-note">
-                    <h4>Vulnerabilidades Demostradas:</h4>
-                    <ul>
-                        <li><strong>Diseño Inseguro:</strong> La API expone información del sistema (versión, memoria, uptime)</li>
-                        <li><strong>Falla Criptográfica:</strong> Los datos sensibles se muestran en texto plano</li>
-                        <li><strong>Broken Access Control:</strong> Cualquiera puede acceder a estos datos sin autenticación</li>
-                    </ul>
-                </div>
-            `;
+    <h3>Datos de API Externa</h3>
+    <div class="json-output">${JSON.stringify(data, null, 2)}</div>
+`;
         })
         .catch(error => {
             resultado.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
