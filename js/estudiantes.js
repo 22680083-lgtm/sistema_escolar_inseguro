@@ -1,4 +1,9 @@
 // js/estudiantes.js
+// Al principio de cada archivo .js
+if (!window.CONFIG) {
+    console.error(' No se encontró config.js. Asegúrate de incluirlo.');
+}
+const API_BASE_URL = window.CONFIG?.apiUrl || '';
 
 let estudiantes = [];
 let estudianteEditando = null;
@@ -33,7 +38,8 @@ function cargarEstudiantes() {
     
     tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Cargando estudiantes...</td></tr>';
     
-    fetch('/api/estudiantes')
+    // ✅ CORREGIDO: Usar API_BASE_URL
+    fetch(`${API_BASE_URL}/api/estudiantes`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`Error HTTP: ${response.status}`);
@@ -119,7 +125,8 @@ function guardarEdicion(event) {
         fechaNacimiento: document.getElementById('edit-fechaNacimiento').value
     };
     
-    fetch(`/api/estudiante/${estudianteEditando.id}`, {
+    // ✅ CORREGIDO: Usar API_BASE_URL
+    fetch(`${API_BASE_URL}/api/estudiante/${estudianteEditando.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datosActualizados)
@@ -143,7 +150,8 @@ function guardarEdicion(event) {
 
 function eliminarEstudiante(id) {
     if (confirm('¿Estás seguro de eliminar este estudiante?')) {
-        fetch(`/api/estudiante/${id}`, {
+        // ✅ CORREGIDO: Usar API_BASE_URL
+        fetch(`${API_BASE_URL}/api/estudiante/${id}`, {
             method: 'DELETE'
         })
         .then(response => {

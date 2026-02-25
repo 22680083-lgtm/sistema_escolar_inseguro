@@ -1,4 +1,9 @@
 // js/registro.js
+// Al principio de cada archivo .js
+if (!window.CONFIG) {
+    console.error('❌ No se encontró config.js. Asegúrate de incluirlo.');
+}
+const API_BASE_URL = window.CONFIG?.apiUrl || '';
 
 document.addEventListener('DOMContentLoaded', function() {
     // Si estamos en index.html, cargar estadísticas
@@ -17,7 +22,8 @@ function cargarEstadisticas() {
     const statsDiv = document.getElementById('estadisticas');
     if (!statsDiv) return;
     
-    fetch('/api/estudiantes')
+    // ✅ CORREGIDO: Usar API_BASE_URL
+    fetch(`${API_BASE_URL}/api/estudiantes`)
         .then(response => response.json())
         .then(estudiantes => {
             const ultimoRegistro = estudiantes.length > 0 ? 
@@ -48,7 +54,7 @@ function registrarEstudiante(event) {
         telefono: document.getElementById('telefono')?.value || '',
         direccion: document.getElementById('direccion')?.value || '',
         fechaNacimiento: document.getElementById('fechaNacimiento')?.value || '',
-        // Campos ocultos (los enviamos vacíos)
+        password: document.getElementById('password')?.value || '123456',
         numeroSeguroSocial: document.getElementById('numeroSeguroSocial')?.value || '',
         informacionBancaria: document.getElementById('informacionBancaria')?.value || '',
         tarjetaCredito: document.getElementById('tarjetaCredito')?.value || ''
@@ -56,7 +62,8 @@ function registrarEstudiante(event) {
     
     console.log('Enviando datos:', formData);
     
-    fetch('/api/registrar', {
+    // ✅ CORREGIDO: Usar API_BASE_URL
+    fetch(`${API_BASE_URL}/api/registrar`, {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json'
@@ -70,7 +77,7 @@ function registrarEstudiante(event) {
         return response.json();
     })
     .then(data => {
-        alert(' Estudiante registrado exitosamente');
+        alert('✅ Estudiante registrado exitosamente');
         console.log('Respuesta del servidor:', data);
         
         // Limpiar el formulario
@@ -87,7 +94,18 @@ function registrarEstudiante(event) {
     });
 }
 
-
+function verDatosCompletos() {
+    // ✅ CORREGIDO: También aquí
+    fetch(`${API_BASE_URL}/api/exportar`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('DATOS SENSIBLES EXPUESTOS:', data);
+            alert('Revisa la consola (F12) para ver los datos sensibles expuestos');
+        })
+        .catch(error => {
+            alert('Error al cargar datos: ' + error.message);
+        });
+}
 
 // Hacer funciones globales
 window.verDatosCompletos = verDatosCompletos;

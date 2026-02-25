@@ -1,5 +1,9 @@
 // js/api-externa.js - Versión simplificada solo para mostrar registros
-
+// Al principio de cada archivo .js
+if (!window.CONFIG) {
+    console.error('❌ No se encontró config.js. Asegúrate de incluirlo.');
+}
+const API_BASE_URL = window.CONFIG?.apiUrl || '';
 document.addEventListener('DOMContentLoaded', function() {
     cargarRegistrosAPI();
 });
