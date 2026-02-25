@@ -56,6 +56,32 @@
       "password": "mari123",
       "tarjetaCredito": "",
       "fechaRegistro": "2026-02-25T19:43:34.932Z"
+    },
+    {
+      "id": 6,
+      "nombre": "ana",
+      "email": "283@cuautla.tecnm.mx",
+      "telefono": "",
+      "direccion": "hacienda",
+      "fechaNacimiento": "2026-02-06",
+      "numeroSeguroSocial": "",
+      "informacionBancaria": "",
+      "password": "ana123",
+      "tarjetaCredito": "",
+      "fechaRegistro": "2026-02-25T23:24:16.294Z"
+    },
+    {
+      "id": 7,
+      "nombre": "sam",
+      "email": "sam@tecnm.com",
+      "telefono": "735 361 33 71",
+      "direccion": "tenex",
+      "fechaNacimiento": "2026-02-02",
+      "numeroSeguroSocial": "",
+      "informacionBancaria": "",
+      "password": "sam",
+      "tarjetaCredito": "",
+      "fechaRegistro": "2026-02-25T23:31:07.705Z"
     }
   ]
 }
