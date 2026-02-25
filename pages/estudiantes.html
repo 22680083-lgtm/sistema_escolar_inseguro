@@ -6,35 +6,133 @@
     <title>Lista de Estudiantes</title>
     <link rel="stylesheet" href="../css/styles.css">
     <style>
-        /* Estilos adicionales específicos para esta página */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+            top: 10px;
+        }
+        
+        .close:hover {
+            color: #667eea;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
         .btn-warning {
             background-color: #ffc107;
             color: #333;
         }
+        
         .btn-warning:hover {
             background-color: #e0a800;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Lista de Estudiantes</h1>
+            <h1>📋 Lista de Estudiantes</h1>
             <nav>
                 <ul>
                     <li><a href="../index.html">Inicio</a></li>
                     <li><a href="registro.html">Registro</a></li>
-                    <li><a href="estudiantes.html">Lista Estudiantes</a></li>
+                    <li><a href="estudiantes.html" class="active">Lista Estudiantes</a></li>
                     <li><a href="api-externa.html">API Externa</a></li>
+                    <li><button id="btnLogout" class="btn" style="background-color: #dc3545;">🚪 Cerrar Sesión</button></li>
                 </ul>
             </nav>
         </header>
 
         <main>
             <div class="table-container">
-                <div style="margin-bottom: 20px;">
-                    <button onclick="cargarEstudiantes()" class="btn">Actualizar Lista</button>
+                <div style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: space-between; align-items: center;">
+                    <button onclick="cargarEstudiantes()" class="btn" style="background-color: #667eea;">🔄 Actualizar Lista</button>
+                    <div id="userInfo" style="color: #667eea; font-weight: bold;"></div>
                 </div>
+
+                <div id="errorMsg" style="display: none; background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
+                <div id="successMsg" style="display: none; background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
 
                 <table id="tablaEstudiantes">
                     <thead>
@@ -43,12 +141,13 @@
                             <th>Nombre</th>
                             <th>Email</th>
                             <th>Teléfono</th>
+                            <th>Fecha Nac.</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td colspan="5" style="text-align: center;">Cargando estudiantes...</td>
+                            <td colspan="6" style="text-align: center;">Cargando estudiantes...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -56,11 +155,11 @@
         </main>
     </div>
 
-    <!-- MODAL DE EDICIÓN - Totalmente centrado -->
+    <!-- MODAL DE EDICIÓN -->
     <div id="modalEditar" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2>Editar Estudiante</h2>
+            <h2>✏️ Editar Estudiante</h2>
             
             <form id="formEditar">
                 <input type="hidden" id="edit-id">
@@ -91,18 +190,307 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="edit-password">Contraseña:</label>
-                    <input type="text" id="edit-password">
+                    <label for="edit-password">Nueva Contraseña (opcional):</label>
+                    <input type="password" id="edit-password" placeholder="Dejar vacío para no cambiar">
                 </div>
 
                 <div class="modal-actions">
-                    <button type="submit" class="btn btn-success">Guardar Cambios</button>
-                    <button type="button" class="btn btn-danger" onclick="cerrarModal()"> Cancelar</button>
+                    <button type="submit" class="btn btn-success">💾 Guardar Cambios</button>
+                    <button type="button" class="btn btn-danger" onclick="cerrarModal()">❌ Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script src="../js/estudiantes.js"></script>
+    <script>
+        // estudiantes.js - Versión completa y corregida
+
+        let estudiantes = [];
+        let estudianteEditando = null;
+        let usuarioActual = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📋 Página de estudiantes cargada');
+            verificarSesion();
+            cargarEstudiantes();
+            
+            // Configurar modal
+            const modal = document.getElementById('modalEditar');
+            const span = document.querySelector('.close');
+            
+            if (span) {
+                span.onclick = cerrarModal;
+            }
+            
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    cerrarModal();
+                }
+            }
+            
+            // Configurar formulario de edición
+            const formEditar = document.getElementById('formEditar');
+            if (formEditar) {
+                formEditar.addEventListener('submit', guardarEdicion);
+            }
+            
+            // Configurar logout
+            const btnLogout = document.getElementById('btnLogout');
+            if (btnLogout) {
+                btnLogout.addEventListener('click', logout);
+            }
+        });
+
+        // Verificar sesión
+        function verificarSesion() {
+            fetch('/api/me', { 
+                method: 'GET',
+                credentials: 'include'
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    window.location.href = 'login.html';
+                    throw new Error('No autenticado');
+                }
+                return response.json();
+            })
+            .then(usuario => {
+                usuarioActual = usuario;
+                document.getElementById('userInfo').textContent = `👤 ${usuario.username} ${usuario.isAdmin ? '👑' : ''}`;
+                console.log('✅ Usuario autenticado:', usuario.username);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                window.location.href = 'login.html';
+            });
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalEditar').style.display = 'none';
+            estudianteEditando = null;
+        }
+
+        function cargarEstudiantes() {
+            const tbody = document.querySelector('#tablaEstudiantes tbody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">⏳ Cargando estudiantes...</td></tr>';
+            
+            fetch('/api/estudiantes', { 
+                method: 'GET',
+                credentials: 'include'
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    window.location.href = 'login.html';
+                    throw new Error('Sesión expirada');
+                }
+                if (!response.ok) {
+                    throw new Error('Error al cargar estudiantes');
+                }
+                return response.json();
+            })
+            .then(data => {
+                estudiantes = data;
+                renderizarTabla(estudiantes);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                tbody.innerHTML = `<tr><td colspan="6" style="color: red; text-align: center;">❌ Error al cargar: ${error.message}</td></tr>`;
+            });
+        }
+
+        function renderizarTabla(estudiantes) {
+            const tbody = document.querySelector('#tablaEstudiantes tbody');
+            if (!tbody) return;
+            
+            if (estudiantes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">📭 No hay estudiantes registrados</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = estudiantes.map(estudiante => {
+                let fechaNac = 'N/A';
+                if (estudiante.fechaNacimiento) {
+                    try {
+                        fechaNac = new Date(estudiante.fechaNacimiento).toLocaleDateString();
+                    } catch (e) {
+                        fechaNac = estudiante.fechaNacimiento;
+                    }
+                }
+                
+                return `
+                <tr>
+                    <td>${estudiante.id}</td>
+                    <td>${escapeHtml(estudiante.nombre || '')}</td>
+                    <td>${escapeHtml(estudiante.email || '')}</td>
+                    <td>${escapeHtml(estudiante.telefono || 'N/A')}</td>
+                    <td>${fechaNac}</td>
+                    <td>
+                        <button onclick="editarEstudiante(${estudiante.id})" class="btn btn-warning" style="margin-right: 5px;">✏️ Editar</button>
+                        ${usuarioActual?.isAdmin ? 
+                            `<button onclick="eliminarEstudiante(${estudiante.id})" class="btn btn-danger">🗑️ Eliminar</button>` : 
+                            ''}
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function editarEstudiante(id) {
+            console.log('Editando estudiante ID:', id);
+            
+            const estudiante = estudiantes.find(e => e.id === id);
+            if (!estudiante) {
+                alert('Estudiante no encontrado');
+                return;
+            }
+            
+            estudianteEditando = estudiante;
+            
+            document.getElementById('edit-id').value = estudiante.id || '';
+            document.getElementById('edit-nombre').value = estudiante.nombre || '';
+            document.getElementById('edit-email').value = estudiante.email || '';
+            document.getElementById('edit-telefono').value = estudiante.telefono || '';
+            document.getElementById('edit-direccion').value = estudiante.direccion || '';
+            document.getElementById('edit-fechaNacimiento').value = estudiante.fechaNacimiento || '';
+            document.getElementById('edit-password').value = '';
+            
+            document.getElementById('modalEditar').style.display = 'block';
+        }
+
+        function guardarEdicion(event) {
+            event.preventDefault();
+            
+            if (!estudianteEditando) {
+                alert('No hay estudiante seleccionado');
+                return;
+            }
+            
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '⏳ Guardando...';
+            submitBtn.disabled = true;
+            
+            const datosActualizados = {
+                nombre: document.getElementById('edit-nombre').value,
+                email: document.getElementById('edit-email').value,
+                telefono: document.getElementById('edit-telefono').value,
+                direccion: document.getElementById('edit-direccion').value,
+                fechaNacimiento: document.getElementById('edit-fechaNacimiento').value
+            };
+            
+            const password = document.getElementById('edit-password').value;
+            if (password && password.trim() !== '') {
+                datosActualizados.password = password;
+            }
+            
+            fetch(`/api/estudiante/${estudianteEditando.id}`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosActualizados)
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    window.location.href = 'login.html';
+                    throw new Error('Sesión expirada');
+                }
+                if (response.status === 403) {
+                    throw new Error('No tienes permiso para editar este estudiante');
+                }
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Error al actualizar');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                mostrarMensaje('✅ Estudiante actualizado correctamente', 'success');
+                cerrarModal();
+                cargarEstudiantes();
+            })
+            .catch(error => {
+                mostrarMensaje(`❌ ${error.message}`, 'error');
+                console.error('Error:', error);
+                
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            });
+        }
+
+        function eliminarEstudiante(id) {
+            if (!confirm('¿Estás seguro de eliminar este estudiante?')) return;
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '⏳ Eliminando...';
+            btn.disabled = true;
+            
+            fetch(`/api/estudiante/${id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    window.location.href = 'login.html';
+                    throw new Error('Sesión expirada');
+                }
+                if (response.status === 403) {
+                    throw new Error('No tienes permisos de administrador');
+                }
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Error al eliminar');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                mostrarMensaje('✅ Estudiante eliminado', 'success');
+                cargarEstudiantes();
+            })
+            .catch(error => {
+                mostrarMensaje(`❌ ${error.message}`, 'error');
+                console.error('Error:', error);
+                
+                btn.textContent = originalText;
+                btn.disabled = false;
+            });
+        }
+
+        function mostrarMensaje(mensaje, tipo) {
+            const msgDiv = document.getElementById(tipo === 'success' ? 'successMsg' : 'errorMsg');
+            msgDiv.textContent = mensaje;
+            msgDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                msgDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function logout() {
+            fetch('/api/logout', { 
+                method: 'POST',
+                credentials: 'include'
+            })
+            .then(() => {
+                window.location.href = 'login.html';
+            })
+            .catch(() => {
+                window.location.href = 'login.html';
+            });
+        }
+    </script>
 </body>
 </html>

@@ -13,7 +13,9 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ============ SEGURIDAD AGREGADA ============
+// ============ MIDDLEWARE GLOBAL ============
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // 1. HELMET - Configura headers de seguridad
 app.use(helmet({
@@ -27,44 +29,38 @@ app.use(helmet({
     },
 }));
 
-// 2. RATE LIMITING - Limita peticiones
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100 // límite de 100 peticiones por IP
-});
-app.use('/api/', limiter);
+// 2. CORS configurado
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}));
 
 // 3. SESIÓN - Para autenticación
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'clave_temporal_cambiar',
+    secret: process.env.SESSION_SECRET || 'clave_secreta_temporal',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: false, // false para desarrollo local
         httpOnly: true,
         maxAge: 1000 * 60 * 60 // 1 hora
     }
 }));
 
-// 4. CORS configurado
-app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-        ? ['https://tudominio.com'] 
-        : 'http://localhost:3000',
-    credentials: true
-}));
+// 4. RATE LIMITING
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100
+});
+app.use('/api/', limiter);
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(__dirname));
-
-// 5. Archivo de base de datos
+// ============ BASE DE DATOS ============
 const DB_PATH = path.join(__dirname, 'db.json');
 
-// Inicializar DB
+// Inicializar DB si no existe
 if (!fs.existsSync(DB_PATH)) {
     const initialDB = {
-        usuarios: [], // Tabla de usuarios para autenticación
+        usuarios: [],
         estudiantes: [],
         configuracion: {
             version: "1.0",
@@ -72,14 +68,15 @@ if (!fs.existsSync(DB_PATH)) {
         }
     };
     fs.writeFileSync(DB_PATH, JSON.stringify(initialDB, null, 2));
+    console.log('✅ Base de datos creada');
 }
 
-// Funciones DB
 function readDB() {
     try {
         const data = fs.readFileSync(DB_PATH, 'utf8');
         return JSON.parse(data);
     } catch (error) {
+        console.error('Error leyendo DB:', error);
         return { usuarios: [], estudiantes: [], configuracion: {} };
     }
 }
@@ -87,6 +84,21 @@ function readDB() {
 function writeDB(data) {
     fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
 }
+
+// ============ RUTA DE DEBUG ============
+app.get('/api/debug-session', (req, res) => {
+    console.log('🔍 DEBUG - Sesión actual:', req.session.id);
+    console.log('   userId:', req.session.userId);
+    console.log('   username:', req.session.username);
+    
+    res.json({
+        autenticado: !!req.session.userId,
+        userId: req.session.userId || null,
+        username: req.session.username || null,
+        isAdmin: req.session.isAdmin || false,
+        sessionId: req.session.id
+    });
+});
 
 // ============ MIDDLEWARE DE AUTENTICACIÓN ============
 function requireAuth(req, res, next) {
@@ -98,7 +110,7 @@ function requireAuth(req, res, next) {
 
 function requireAdmin(req, res, next) {
     if (!req.session.isAdmin) {
-        return res.status(403).json({ error: 'Acceso denegado - Se requiere rol de administrador' });
+        return res.status(403).json({ error: 'Acceso denegado - Se requieren permisos de administrador' });
     }
     next();
 }
@@ -111,20 +123,24 @@ app.post('/api/register', [
     body('password').isLength({ min: 6 }),
     body('email').isEmail().normalizeEmail()
 ], async (req, res) => {
+    console.log('📝 POST /api/register - Recibido:', req.body.username);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        return res.status(400).json({ error: 'Datos inválidos', detalles: errors.array() });
     }
 
     const db = readDB();
     const { username, password, email } = req.body;
 
-    // Verificar si usuario existe
     if (db.usuarios.find(u => u.username === username)) {
-        return res.status(400).json({ error: 'Usuario ya existe' });
+        return res.status(400).json({ error: 'El nombre de usuario ya existe' });
     }
 
-    // Hash de contraseña
+    if (db.usuarios.find(u => u.email === email)) {
+        return res.status(400).json({ error: 'El email ya está registrado' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const nuevoUsuario = {
@@ -139,21 +155,26 @@ app.post('/api/register', [
     db.usuarios.push(nuevoUsuario);
     writeDB(db);
 
+    console.log('✅ Usuario registrado:', username);
     res.json({ mensaje: 'Usuario registrado exitosamente' });
 });
 
 // Login
 app.post('/api/login', async (req, res) => {
+    console.log('🔑 POST /api/login - Intento:', req.body.username);
+    
     const db = readDB();
     const { username, password } = req.body;
 
     const usuario = db.usuarios.find(u => u.username === username);
     if (!usuario) {
+        console.log('❌ Usuario no encontrado:', username);
         return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
     const passwordValida = await bcrypt.compare(password, usuario.password);
     if (!passwordValida) {
+        console.log('❌ Contraseña incorrecta para:', username);
         return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
@@ -161,29 +182,71 @@ app.post('/api/login', async (req, res) => {
     req.session.username = usuario.username;
     req.session.isAdmin = usuario.isAdmin || false;
 
-    res.json({ 
-        mensaje: 'Login exitoso',
-        usuario: {
-            id: usuario.id,
-            username: usuario.username,
-            email: usuario.email,
-            isAdmin: usuario.isAdmin
+    req.session.save((err) => {
+        if (err) {
+            console.error('❌ Error guardando sesión:', err);
+            return res.status(500).json({ error: 'Error al iniciar sesión' });
         }
+        
+        console.log('✅ Login exitoso para:', username);
+        console.log('   Session ID:', req.session.id);
+        
+        res.json({ 
+            mensaje: 'Login exitoso',
+            usuario: {
+                id: usuario.id,
+                username: usuario.username,
+                email: usuario.email,
+                isAdmin: usuario.isAdmin
+            }
+        });
     });
 });
 
 // Logout
 app.post('/api/logout', (req, res) => {
-    req.session.destroy();
-    res.json({ mensaje: 'Logout exitoso' });
+    console.log('🚪 Logout para:', req.session.username);
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Error en logout:', err);
+            return res.status(500).json({ error: 'Error al cerrar sesión' });
+        }
+        res.json({ mensaje: 'Logout exitoso' });
+    });
 });
 
-// ============ API DE ESTUDIANTES (CON AUTENTICACIÓN) ============
-
-// Obtener todos (requiere auth)
-app.get('/api/estudiantes', requireAuth, (req, res) => {
+// Verificar sesión actual
+app.get('/api/me', (req, res) => {
+    console.log('👤 GET /api/me - Sesión:', req.session.id);
+    
+    if (!req.session.userId) {
+        console.log('❌ No autenticado');
+        return res.status(401).json({ error: 'No autenticado' });
+    }
+    
     const db = readDB();
-    // No mostrar datos sensibles
+    const usuario = db.usuarios.find(u => u.id === req.session.userId);
+    
+    if (!usuario) {
+        console.log('❌ Usuario no encontrado en DB');
+        return res.status(401).json({ error: 'Usuario no encontrado' });
+    }
+    
+    console.log('✅ Usuario autenticado:', usuario.username);
+    res.json({
+        id: usuario.id,
+        username: usuario.username,
+        email: usuario.email,
+        isAdmin: usuario.isAdmin
+    });
+});
+
+// ============ API DE ESTUDIANTES ============
+
+// Obtener todos los estudiantes
+app.get('/api/estudiantes', requireAuth, (req, res) => {
+    console.log('📋 GET /api/estudiantes - Usuario:', req.session.username);
+    const db = readDB();
     const estudiantesSeguros = db.estudiantes.map(e => ({
         id: e.id,
         nombre: e.nombre,
@@ -191,86 +254,83 @@ app.get('/api/estudiantes', requireAuth, (req, res) => {
         telefono: e.telefono,
         fechaNacimiento: e.fechaNacimiento,
         fechaRegistro: e.fechaRegistro
-        // NO incluimos password, seguroSocial, etc.
     }));
     res.json(estudiantesSeguros);
 });
 
-// Ver un estudiante (solo si es admin o el mismo usuario)
+// Obtener un estudiante por ID
 app.get('/api/estudiante/:id', requireAuth, (req, res) => {
     const db = readDB();
     const id = parseInt(req.params.id);
     const estudiante = db.estudiantes.find(e => e.id === id);
     
     if (!estudiante) {
-        return res.status(404).json({ error: 'No encontrado' });
+        return res.status(404).json({ error: 'Estudiante no encontrado' });
     }
 
-    // Solo admin o el propio usuario puede ver datos sensibles
     if (req.session.isAdmin || req.session.userId === estudiante.usuarioId) {
         res.json(estudiante);
     } else {
-        // Versión sin datos sensibles
-        const { password, numeroSeguroSocial, informacionBancaria, tarjetaCredito, ...datosPublicos } = estudiante;
+        const { password, ...datosPublicos } = estudiante;
         res.json(datosPublicos);
     }
 });
 
-// Registrar (con validación)
+// Registrar nuevo estudiante
 app.post('/api/registrar', requireAuth, [
-    body('nombre').trim().escape(),
+    body('nombre').notEmpty().trim().escape(),
     body('email').isEmail().normalizeEmail(),
     body('telefono').optional().trim().escape(),
     body('direccion').optional().trim().escape(),
     body('fechaNacimiento').optional().isISO8601()
 ], (req, res) => {
+    console.log('📝 POST /api/registrar - Usuario:', req.session.username);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        return res.status(400).json({ error: 'Datos inválidos', detalles: errors.array() });
     }
 
     const db = readDB();
     
-    // Generar password aleatorio (no se guarda el del usuario)
-    const passwordTemporal = Math.random().toString(36).slice(-8);
-    
     const nuevoEstudiante = {
         id: db.estudiantes.length + 1,
-        usuarioId: req.session.userId, // Asociar al usuario que crea
+        usuarioId: req.session.userId,
         nombre: req.body.nombre,
         email: req.body.email,
         telefono: req.body.telefono || '',
         direccion: req.body.direccion || '',
         fechaNacimiento: req.body.fechaNacimiento || '',
-        // NO guardamos datos sensibles del formulario inseguro
         fechaRegistro: new Date().toISOString()
     };
     
     db.estudiantes.push(nuevoEstudiante);
     writeDB(db);
     
+    console.log('✅ Estudiante registrado:', nuevoEstudiante.nombre);
     res.json({ 
-        mensaje: 'Estudiante registrado',
+        mensaje: 'Estudiante registrado exitosamente',
         estudiante: nuevoEstudiante
     });
 });
 
-// Actualizar (solo si es admin o propietario)
+// Actualizar estudiante
 app.put('/api/estudiante/:id', requireAuth, async (req, res) => {
+    console.log('✏️ PUT /api/estudiante/:id - Usuario:', req.session.username);
+    
     const db = readDB();
     const id = parseInt(req.params.id);
     const index = db.estudiantes.findIndex(e => e.id === id);
     
     if (index === -1) {
-        return res.status(404).json({ error: 'No encontrado' });
+        return res.status(404).json({ error: 'Estudiante no encontrado' });
     }
 
-    // Verificar permisos
     if (!req.session.isAdmin && db.estudiantes[index].usuarioId !== req.session.userId) {
-        return res.status(403).json({ error: 'No tienes permiso para editar este registro' });
+        return res.status(403).json({ error: 'No tienes permiso para editar este estudiante' });
     }
     
-    // Actualizar solo campos permitidos
+    // Actualizar solo los campos permitidos
     db.estudiantes[index] = {
         ...db.estudiantes[index],
         nombre: req.body.nombre || db.estudiantes[index].nombre,
@@ -280,75 +340,75 @@ app.put('/api/estudiante/:id', requireAuth, async (req, res) => {
         fechaNacimiento: req.body.fechaNacimiento || db.estudiantes[index].fechaNacimiento
     };
     
+    // Si se envía nueva contraseña
+    if (req.body.password && req.body.password.trim() !== '') {
+        db.estudiantes[index].password = await bcrypt.hash(req.body.password, 10);
+    }
+    
     writeDB(db);
-    res.json({ mensaje: 'Actualizado', estudiante: db.estudiantes[index] });
+    console.log('✅ Estudiante actualizado ID:', id);
+    res.json({ 
+        mensaje: 'Estudiante actualizado correctamente',
+        estudiante: db.estudiantes[index]
+    });
 });
 
-// Eliminar (solo admin)
+// Eliminar estudiante (solo admin)
 app.delete('/api/estudiante/:id', requireAuth, requireAdmin, (req, res) => {
+    console.log('🗑️ DELETE /api/estudiante/:id - Admin:', req.session.username);
+    
     const db = readDB();
     const id = parseInt(req.params.id);
+    const initialLength = db.estudiantes.length;
+    
     db.estudiantes = db.estudiantes.filter(e => e.id !== id);
+    
+    if (db.estudiantes.length === initialLength) {
+        return res.status(404).json({ error: 'Estudiante no encontrado' });
+    }
+    
     writeDB(db);
-    res.json({ mensaje: 'Eliminado' });
+    console.log('✅ Estudiante eliminado ID:', id);
+    res.json({ mensaje: 'Estudiante eliminado correctamente' });
 });
 
-// ============ API EXTERNA SEGURA ============
+// ============ API EXTERNA ============
 app.get('/api/externa/datos', requireAuth, (req, res) => {
-    const db = readDB();
+    console.log('🔌 GET /api/externa/datos - Usuario:', req.session.username);
     
+    const db = readDB();
     res.json({
-        estudiantes: db.estudiantes.length,
+        totalEstudiantes: db.estudiantes.length,
         ultimosRegistros: db.estudiantes.slice(-5).map(e => ({
             id: e.id,
             nombre: e.nombre,
             email: e.email,
             fechaRegistro: e.fechaRegistro
-            // Sin datos sensibles
-        }))
+        })),
+        estadisticas: {
+            conTelefono: db.estudiantes.filter(e => e.telefono).length,
+            conDireccion: db.estudiantes.filter(e => e.direccion).length,
+            conFechaNac: db.estudiantes.filter(e => e.fechaNacimiento).length
+        }
     });
 });
 
-// ============ RUTAS ADMIN (PROTEGIDAS) ============
-app.get('/admin', requireAuth, requireAdmin, (req, res) => {
-    const db = readDB();
-    res.json({
-        mensaje: 'Panel de Administración',
-        totalEstudiantes: db.estudiantes.length,
-        estudiantes: db.estudiantes.map(e => ({
-            ...e,
-            // Mostrar todo SOLO a admin
-        }))
-    });
-});
+// ============ SERVIDOR DE ARCHIVOS ESTÁTICOS ============
+app.use(express.static(__dirname));
 
-// Debug solo en desarrollo
-if (process.env.NODE_ENV !== 'production') {
-    app.get('/debug', (req, res) => {
-        res.json({ mensaje: 'Modo debug solo disponible en desarrollo' });
-    });
-}
-
-// ============ LOGIN REDIRECT ============
-app.get('/api/me', requireAuth, (req, res) => {
-    const db = readDB();
-    const usuario = db.usuarios.find(u => u.id === req.session.userId);
-    res.json({
-        id: usuario.id,
-        username: usuario.username,
-        email: usuario.email,
-        isAdmin: usuario.isAdmin
-    });
-});
-
+// ============ INICIAR SERVIDOR ============
 app.listen(PORT, () => {
-    console.log(` Servidor seguro en http://localhost:${PORT}`);
-    console.log(' Medidas de seguridad activadas:');
-    console.log('   - Helmet (headers seguros)');
-    console.log('   - Rate limiting');
-    console.log('   - Sesiones con cookies seguras');
-    console.log('   - Validación de entrada');
-    console.log('   - Autenticación requerida');
-    console.log('   - Contraseñas hasheadas con bcrypt');
-    console.log('   - Control de acceso por roles');
+    console.log(`\n🚀 Servidor corriendo en http://localhost:${PORT}`);
+    console.log('📁 Base de datos:', DB_PATH);
+    console.log('\n✅ Rutas API disponibles:');
+    console.log('   - GET  /api/debug-session');
+    console.log('   - POST /api/register');
+    console.log('   - POST /api/login');
+    console.log('   - POST /api/logout');
+    console.log('   - GET  /api/me');
+    console.log('   - GET  /api/estudiantes');
+    console.log('   - POST /api/registrar');
+    console.log('   - PUT  /api/estudiante/:id');
+    console.log('   - DEL  /api/estudiante/:id');
+    console.log('   - GET  /api/externa/datos\n');
 });

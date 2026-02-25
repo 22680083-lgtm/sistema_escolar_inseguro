@@ -1,4 +1,38 @@
 {
+  "usuarios": [
+    {
+      "id": 1,
+      "username": "maribel",
+      "email": "maribel@email.com",
+      "password": "$2b$10$Nt3qYq1z3x1Y1z3x1Y1z3u",
+      "isAdmin": false,
+      "fechaRegistro": "2026-02-23T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "username": "admin",
+      "email": "admin@escuela.com",
+      "password": "$2b$10$Nt3qYq1z3x1Y1z3x1Y1z3u",
+      "isAdmin": true,
+      "fechaRegistro": "2026-02-23T00:00:00.000Z"
+    },
+    {
+      "id": 1,
+      "username": "maribel",
+      "email": "maribel@escuela.com",
+      "password": "$2b$10$9a3fv4AVfewcMyUs4O3iBecZSwqrsVeyNhxw5zmCb2j3nVEyIHdeK",
+      "isAdmin": false,
+      "fechaRegistro": "2026-02-25T15:02:00.679Z"
+    },
+    {
+      "id": 2,
+      "username": "admin",
+      "email": "admin@escuela.com",
+      "password": "$2b$10$9a3fv4AVfewcMyUs4O3iBecZSwqrsVeyNhxw5zmCb2j3nVEyIHdeK",
+      "isAdmin": true,
+      "fechaRegistro": "2026-02-25T15:02:00.679Z"
+    }
+  ],
   "estudiantes": [
     {
       "id": 1,
@@ -7,7 +41,6 @@
       "telefono": "7351484445",
       "direccion": "benito juarez",
       "fechaNacimiento": "2026-02-23",
-      "password": "mari123",
       "fechaRegistro": "2026-02-23T16:16:28.417Z"
     },
     {
@@ -17,14 +50,11 @@
       "telefono": "735 256 145 16",
       "direccion": "benito juarez",
       "fechaNacimiento": "2024-03-21",
-      "password": "mati123",
       "fechaRegistro": "2026-02-23T22:11:42.460Z"
     }
   ],
   "configuracion": {
     "version": "1.0",
-    "ultimoAcceso": "2024-01-01T00:00:00.000Z",
-    "claveSecreta": "123456789",
-    "dbPassword": "admin123"
+    "ultimoAcceso": "2024-01-01T00:00:00.000Z"
   }
 }

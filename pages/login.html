@@ -36,8 +36,8 @@
         }
 
         header h1 {
-    color: #667eea; /* Color sólido en lugar de degradado */
-}
+            color: #667eea;
+        }
 
         nav ul {
             list-style: none;
@@ -97,13 +97,10 @@
         }
 
         .auth-header h2 {
-    color: transparent;
-    font-size: 32px;
-    margin-bottom: 15px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-}
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
 
         .auth-header p {
             color: #666;
@@ -172,6 +169,11 @@
             transform: translateY(0);
         }
 
+        .auth-form button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
         .auth-footer {
             text-align: center;
             margin-top: 30px;
@@ -220,10 +222,6 @@
             background: #667eea;
             color: white;
             transform: translateX(-5px);
-        }
-
-        .back-link i {
-            margin-right: 8px;
         }
 
         .error-message {
@@ -331,7 +329,7 @@
                         <div class="password-hint">Mínimo 6 caracteres</div>
                     </div>
 
-                    <button type="submit">
+                    <button type="submit" id="btnSubmit">
                         🚀 Iniciar Sesión
                     </button>
                 </form>
@@ -350,7 +348,7 @@
         const formLogin = document.getElementById('formLogin');
         const errorMsg = document.getElementById('errorMsg');
         const successMsg = document.getElementById('successMsg');
-        const submitBtn = document.querySelector('button[type="submit"]');
+        const submitBtn = document.getElementById('btnSubmit');
 
         formLogin.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -373,15 +371,15 @@
                 return;
             }
 
+            // Cambiar estado del botón
+            const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '⏳ Iniciando sesión...';
             submitBtn.disabled = true;
 
             try {
                 const response = await fetch('/api/login', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password }),
                     credentials: 'include'
                 });
@@ -392,17 +390,33 @@
                     throw new Error(data.error || 'Error al iniciar sesión');
                 }
 
+                // Login exitoso
+                console.log('✅ Login exitoso para:', username);
+                
                 successMsg.textContent = '✅ ¡Login exitoso! Redirigiendo...';
                 successMsg.style.display = 'block';
 
-                setTimeout(() => {
-                    window.location.href = '../index.html';
-                }, 1500);
+                // Verificar que la sesión se creó correctamente
+                setTimeout(async () => {
+                    try {
+                        const verifyResponse = await fetch('/api/me', { credentials: 'include' });
+                        if (verifyResponse.ok) {
+                            const userData = await verifyResponse.json();
+                            console.log('✅ Sesión verificada:', userData);
+                            window.location.href = '/index.html';
+                        } else {
+                            throw new Error('No se pudo verificar la sesión');
+                        }
+                    } catch (err) {
+                        console.error('Error verificando sesión:', err);
+                        window.location.href = '/index.html';
+                    }
+                }, 1000);
 
             } catch (error) {
                 errorMsg.textContent = `❌ ${error.message}`;
                 errorMsg.style.display = 'block';
-                submitBtn.innerHTML = '🚀 Iniciar Sesión';
+                submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
         });
