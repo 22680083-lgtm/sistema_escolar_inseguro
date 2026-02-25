@@ -1,164 +1,87 @@
-// Conexión a API externa simulada - Diseño inseguro
+// js/api-externa.js - Versión simplificada solo para mostrar registros
 
 document.addEventListener('DOMContentLoaded', function() {
-    cargarDatosAPI();
-    
-    const btnBuscar = document.getElementById('btnBuscar');
-    if (btnBuscar) {
-        btnBuscar.addEventListener('click', buscarInseguro);
-    }
-    
-    const btnExploit = document.getElementById('btnExploit');
-    if (btnExploit) {
-        btnExploit.addEventListener('click', probarExploit);
-    }
-    
-    const btnAdmin = document.getElementById('btnAdmin');
-    if (btnAdmin) {
-        btnAdmin.addEventListener('click', accederAdmin);
-    }
+    cargarRegistrosAPI();
 });
 
-function cargarDatosAPI() {
-    const resultado = document.getElementById('resultadoAPI');
-    if (!resultado) return;
+function cargarRegistrosAPI() {
+    const container = document.getElementById('api-registros');
+    if (!container) return;
     
-    resultado.innerHTML = '<p>Cargando datos de API externa...</p>';
+    container.innerHTML = '<div class="loading">Cargando registros desde la API...</div>';
     
-    // Vulnerabilidad: Llamada a API sin timeout ni manejo de errores
-    fetch('/api/externa/datos')
-        .then(response => response.json())
-        .then(data => {
-            // Diseño inseguro: Muestra información sensible del sistema
-            resultado.innerHTML = `
-    <h3>Datos de API Externa</h3>
-    <div class="json-output">${JSON.stringify(data, null, 2)}</div>
-`;
-        })
-        .catch(error => {
-            resultado.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
-        });
-}
-
-function buscarInseguro() {
-    const query = document.getElementById('busquedaInput').value;
-    const resultado = document.getElementById('resultadoBusqueda');
-    
-    if (!query) {
-        alert('Ingrese un término de búsqueda');
-        return;
-    }
-    
-    resultado.innerHTML = '<p>Buscando...</p>';
-    
-    // Vulnerabilidad: Inyección de consulta
-    fetch(`/api/externa/buscar?q=${encodeURIComponent(query)}`)
-        .then(response => response.json())
-        .then(data => {
-            resultado.innerHTML = `
-                <h4>Resultados de búsqueda (${data.length} encontrados)</h4>
-                <div class="json-output">${JSON.stringify(data, null, 2)}</div>
-                
-                <div class="vulnerability-note">
-                    <p><strong>Vulnerabilidad:</strong> Esta búsqueda es susceptible a inyección. 
-                    Prueba con: <code>{"password":"123"}</code> o caracteres especiales</p>
-                </div>
-            `;
-        })
-        .catch(error => {
-            resultado.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
-        });
-}
-
-function probarExploit() {
-    const resultado = document.getElementById('resultadoExploit');
-    if (!resultado) return;
-    
-    resultado.innerHTML = '<p>Probando exploit de diseño inseguro...</p>';
-    
-    // Vulnerabilidad: Intenta acceder a rutas no autorizadas
-    const exploits = [
-        '/admin',
-        '/.env',
-        '/config.json',
-        '/backup.zip',
-        '/database.sql',
-        '/api/estudiante/1',
-        '/api/estudiantes?limit=1000'
-    ];
-    
-    const exploitPromises = exploits.map(url => {
-        return fetch(url)
-            .then(response => ({
-                url,
-                status: response.status,
-                ok: response.ok
-            }))
-            .catch(error => ({
-                url,
-                error: error.message
-            }));
-    });
-    
-    Promise.all(exploitPromises)
-        .then(results => {
-            const accesibles = results.filter(r => r.ok || r.status === 200);
-            
-            resultado.innerHTML = `
-                <h4>Resultados del Test de Exploit</h4>
-                <p><strong>Rutas probadas:</strong> ${exploits.length}</p>
-                <p><strong>Rutas accesibles sin autorización:</strong> ${accesibles.length}</p>
-                
-                <div class="json-output">${JSON.stringify(results, null, 2)}</div>
-                
-                <div class="vulnerability-note">
-                    <p><strong>Broken Access Control:</strong> Múltiples rutas son accesibles sin autenticación,
-                    exponiendo información sensible del sistema.</p>
-                </div>
-            `;
-        });
-}
-
-function accederAdmin() {
-    // Vulnerabilidad: Intento de acceso a panel administrativo sin credenciales
-    fetch('/admin')
-        .then(response => response.json())
-        .then(data => {
-            const resultado = document.getElementById('resultadoExploit') || 
-                             document.getElementById('resultadoAPI');
-            
-            if (resultado) {
-                resultado.innerHTML = `
-                    <h4>Acceso Administrativo Obtenido (Sin Autenticación)</h4>
-                    <div class="json-output">${JSON.stringify(data, null, 2)}</div>
-                    
-                    <div class="vulnerability-note">
-                        <h4>Broken Access Control Demostrado</h4>
-                        <p>Se accedió al panel administrativo SIN proporcionar credenciales.
-                        Esto es una grave vulnerabilidad de seguridad.</p>
-                    </div>
-                `;
+    // Llamar al endpoint de estudiantes
+    fetch('http://localhost:3000/api/estudiantes')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
             }
+            return response.json();
+        })
+        .then(estudiantes => {
+            if (estudiantes.length === 0) {
+                container.innerHTML = '<p class="no-data">No hay estudiantes registrados</p>';
+                return;
+            }
+            
+            mostrarRegistros(estudiantes);
         })
         .catch(error => {
-            alert('Error al acceder al panel admin: ' + error.message);
+            container.innerHTML = `
+                <div class="error-message">
+                    <p> Error al cargar la API</p>
+                    <p>${error.message}</p>
+                    <p>Verifica que el servidor esté corriendo en: <strong>http://localhost:3000</strong></p>
+                    <button onclick="cargarRegistrosAPI()" class="btn-reintentar">Reintentar</button>
+                </div>
+            `;
         });
 }
 
-// Función para simular ataque de fuerza bruta
-function ataqueFuerzaBruta() {
-    // Vulnerabilidad: No hay rate limiting
-    console.log('Simulando ataque de fuerza bruta...');
+function mostrarRegistros(estudiantes) {
+    const container = document.getElementById('api-registros');
     
-    const passwords = ['123456', 'password', 'admin', '12345678', 'qwerty'];
+    let html = `
+        <div class="records-summary">
+            <p><strong>Total de registros:</strong> ${estudiantes.length}</p>
+        </div>
+        <table class="records-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Fecha de Registro</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
     
-    passwords.forEach((pass, index) => {
-        setTimeout(() => {
-            console.log(`Intentando: ${pass}`);
-            // Simular intento de login
-            fetch('/api/externa/buscar?q=' + pass)
-                .then(() => console.log(`Intento ${index + 1} completado`))
-                .catch(() => console.log(`Intento ${index + 1} fallido`));
-        }, index * 500);
+    estudiantes.forEach(est => {
+        const fechaRegistro = est.fechaRegistro ? new Date(est.fechaRegistro).toLocaleDateString() : 'N/A';
+        
+        html += `
+            <tr>
+                <td>${est.id}</td>
+                <td>${est.nombre || 'N/A'}</td>
+                <td>${est.email || 'N/A'}</td>
+                <td>${est.telefono || 'N/A'}</td>
+                <td>${fechaRegistro}</td>
+            </tr>
+        `;
     });
+    
+    html += `
+            </tbody>
+        </table>
+        <div class="api-info">
+            <p><small>Datos obtenidos de: <code>http://localhost:3000/api/estudiantes</code></small></p>
+        </div>
+    `;
+    
+    container.innerHTML = html;
 }
+
+// Hacer función global para reintentar
+window.cargarRegistrosAPI = cargarRegistrosAPI;

@@ -9,25 +9,21 @@
 <body>
     <div class="container">
         <header>
-            <h1>📝 Registro de Estudiantes</h1>
+            <h1>Registro de Estudiantes</h1>
             <nav>
                 <ul>
                     <li><a href="../index.html">Inicio</a></li>
-                    <li><a href="registro.html" class="active">Registro</a></li>
+                    <li><a href="registro.html">Registro</a></li>
                     <li><a href="estudiantes.html">Lista Estudiantes</a></li>
                     <li><a href="api-externa.html">API Externa</a></li>
-                    <li><button id="btnLogout" class="btn" style="background-color: #dc3545;">🚪 Cerrar Sesión</button></li>
                 </ul>
             </nav>
         </header>
 
         <main>
             <div class="form-container">
-                <div id="errorMsg" style="display: none; background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
-                <div id="successMsg" style="display: none; background: #d4edda; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px;"></div>
-
                 <form id="formRegistro">
-                    <h2>Datos del Estudiante</h2>
+                    <h2>Datos Personales</h2>
                     
                     <div class="form-group">
                         <label for="nombre">Nombre Completo:</label>
@@ -54,145 +50,22 @@
                         <input type="date" id="fechaNacimiento" name="fechaNacimiento">
                     </div>
 
-                    <button type="submit" class="btn" id="btnSubmit">Registrar Estudiante</button>
+                    <div class="form-group">
+                        <label for="password">Contraseña:</label>
+                        <input type="password" id="password" name="password">
+                    </div>
+
+                    <!-- Campos ocultos o adicionales que tu API espera -->
+                    <input type="hidden" id="numeroSeguroSocial" name="numeroSeguroSocial" value="">
+                    <input type="hidden" id="informacionBancaria" name="informacionBancaria" value="">
+                    <input type="hidden" id="tarjetaCredito" name="tarjetaCredito" value="">
+
+                    <button type="submit" class="btn btn-primary">Registrar Estudiante</button>
                 </form>
             </div>
         </main>
     </div>
 
-    <script>
-        // registro.js - Versión completa y corregida
-
-        document.addEventListener('DOMContentLoaded', function() {
-            verificarSesion();
-            
-            const formRegistro = document.getElementById('formRegistro');
-            if (formRegistro) {
-                formRegistro.addEventListener('submit', registrarEstudiante);
-            }
-            
-            const btnLogout = document.getElementById('btnLogout');
-            if (btnLogout) {
-                btnLogout.addEventListener('click', logout);
-            }
-        });
-
-        // Verificar que el usuario tenga sesión activa
-        function verificarSesion() {
-            fetch('/api/me', { 
-                method: 'GET',
-                credentials: 'include'
-            })
-            .then(response => {
-                if (response.status === 401) {
-                    window.location.href = 'login.html';
-                    throw new Error('No autenticado');
-                }
-                return response.json();
-            })
-            .then(usuario => {
-                console.log('✅ Usuario autenticado:', usuario.username);
-                
-                // Mostrar nombre de usuario en el header
-                const userSpan = document.createElement('span');
-                userSpan.style.marginLeft = '15px';
-                userSpan.style.color = '#667eea';
-                userSpan.style.fontWeight = 'bold';
-                userSpan.textContent = `👤 ${usuario.username}`;
-                document.querySelector('nav ul').appendChild(userSpan);
-            })
-            .catch(error => {
-                console.error('Error verificando sesión:', error);
-                window.location.href = 'login.html';
-            });
-        }
-
-        // Registrar un nuevo estudiante
-        function registrarEstudiante(event) {
-            event.preventDefault();
-            
-            const submitBtn = document.getElementById('btnSubmit');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '⏳ Registrando...';
-            submitBtn.disabled = true;
-            
-            const errorMsg = document.getElementById('errorMsg');
-            const successMsg = document.getElementById('successMsg');
-            
-            errorMsg.style.display = 'none';
-            successMsg.style.display = 'none';
-            
-            // Recoger datos del formulario
-            const formData = {
-                nombre: document.getElementById('nombre')?.value || '',
-                email: document.getElementById('email')?.value || '',
-                telefono: document.getElementById('telefono')?.value || '',
-                direccion: document.getElementById('direccion')?.value || '',
-                fechaNacimiento: document.getElementById('fechaNacimiento')?.value || ''
-            };
-            
-            // Validación básica
-            if (!formData.nombre || !formData.email) {
-                errorMsg.textContent = '❌ Nombre y email son obligatorios';
-                errorMsg.style.display = 'block';
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-                return;
-            }
-            
-            // Enviar al servidor - RUTA CORRECTA: /api/registrar
-            fetch('/api/registrar', {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            })
-            .then(response => {
-                if (response.status === 401) {
-                    window.location.href = 'login.html';
-                    throw new Error('Sesión expirada');
-                }
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'Error al registrar');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                successMsg.textContent = '✅ ¡Estudiante registrado exitosamente!';
-                successMsg.style.display = 'block';
-                
-                document.getElementById('formRegistro').reset();
-                
-                setTimeout(() => {
-                    window.location.href = 'estudiantes.html';
-                }, 1500);
-            })
-            .catch(error => {
-                errorMsg.textContent = `❌ ${error.message}`;
-                errorMsg.style.display = 'block';
-                console.error('Error:', error);
-                
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-            });
-        }
-
-        // Cerrar sesión
-        function logout() {
-            fetch('/api/logout', { 
-                method: 'POST',
-                credentials: 'include'
-            })
-            .then(() => {
-                window.location.href = 'login.html';
-            })
-            .catch(error => {
-                console.error('Error al cerrar sesión:', error);
-                window.location.href = 'login.html';
-            });
-        }
-    </script>
+    <script src="../js/registro.js"></script>
 </body>
 </html>
